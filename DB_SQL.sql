@@ -37,6 +37,7 @@ CREATE TABLE "tests" (
 	"sysname" VARCHAR(255) NOT NULL,
 	"release" VARCHAR(255) NOT NULL,
 	"port" VARCHAR(255) NOT NULL,
+	"branch" VARCHAR(255) NOT NULL,
 	CONSTRAINT tests_pk PRIMARY KEY ("id")
 ) WITH (
   OIDS=FALSE
