@@ -30,7 +30,7 @@ class Database():
         
         Example of usage: add_to_database (table, {"name": "John Doe", "email": "example@example.com"})
 
-        """
+        """ 
 
         table_columns = [*dictionary_of_columns_and_values] # Unpack dictionary keys into a list
         table_values = tuple(dictionary_of_columns_and_values.values())
@@ -236,6 +236,8 @@ class Xml():
                    
                 
         self.Database.update_database("tests", {"test_cases":test_cases_counter}, test_id)
+
+        return test_id
 
 
 if __name__ == "__main__":
