@@ -5,13 +5,6 @@ import urllib.request, urllib.error
 from datetime import datetime
 
 
-gson_builds = ["i386", "i386-debug", "i386-linuxhost", "amd64", "amd64-baremetal", "evbarm-earmv7hf", "pmax", "landisk"]
-gson_url = "http://www.gson.org/netbsd/bugs/build/"
-
-b5_builds = ["amd64", "i386", "sparc", "evbarm-earmv7hf", "pmax", "hpcmips"]
-b5_url = "http://releng.netbsd.org/b5reports/"
-
-
 def pull(url, json_path, platforms_list):
     
     with open(json_path, "r") as file:
@@ -72,6 +65,22 @@ def pull(url, json_path, platforms_list):
     with open(json_path, "w") as file:
         json.dump(data_dictionary, file)
 
-pull(gson_url, "gson.json", gson_builds)
-pull(b5_url, "babylon5.json", b5_builds)
+
+def json_keys(json_file_path):
+    with open(json_file_path, "r") as json_file:
+        json_data = json.load(json_file)
+        json_keys = [*json_data]
+
+if __name__ == "__main__":
+
+    gson_url = "http://www.gson.org/netbsd/bugs/build/"
+    gson_builds = json_keys("gson.json")
+
+    b5_url = "http://releng.netbsd.org/b5reports/"
+    b5_builds = json_keys("babylon5.json")
+
+    
+    pull(gson_url, "gson.json", gson_builds)
+    pull(b5_url, "babylon5.json", b5_builds)
+
 
