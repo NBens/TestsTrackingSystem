@@ -16,7 +16,6 @@ CREATE TABLE "testing_environment" (
 	"test_owner_id" integer NOT NULL,
 	"name" VARCHAR(255) NOT NULL,
 	"platform" VARCHAR(255) NOT NULL,
-	"version" VARCHAR(255) NOT NULL DEFAULT 'NULL',
 	"description" TEXT NOT NULL,
 	CONSTRAINT testing_environment_pk PRIMARY KEY ("id")
 ) WITH (
@@ -111,6 +110,17 @@ CREATE TABLE "admins" (
 
 
 
+CREATE TABLE "test_data_websites" (
+	"id" serial NOT NULL,
+	"url" varchar(500) NOT NULL,
+	"name" varchar(500) NOT NULL,
+	CONSTRAINT test_data_websites_pk PRIMARY KEY ("id")
+) WITH (
+  OIDS=FALSE
+);
+
+
+
 ALTER TABLE "test_owners" ADD CONSTRAINT "test_owners_fk0" FOREIGN KEY ("added_by_admin_id") REFERENCES "admins"("id");
 
 ALTER TABLE "testing_environment" ADD CONSTRAINT "testing_environment_fk0" FOREIGN KEY ("test_owner_id") REFERENCES "test_owners"("id");
@@ -124,5 +134,6 @@ ALTER TABLE "test_cases" ADD CONSTRAINT "test_cases_fk0" FOREIGN KEY ("test_prog
 ALTER TABLE "files" ADD CONSTRAINT "files_fk0" FOREIGN KEY ("test_case_id") REFERENCES "test_cases"("id");
 
 ALTER TABLE "env_variables" ADD CONSTRAINT "env_variables_fk0" FOREIGN KEY ("test_id") REFERENCES "tests"("id");
+
 
 
