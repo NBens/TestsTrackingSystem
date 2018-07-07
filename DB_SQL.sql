@@ -4,6 +4,7 @@ CREATE TABLE "test_owners" (
 	"password" VARCHAR(255) NOT NULL,
 	"salt" VARCHAR(255) NOT NULL,
 	"added_by_admin_id" integer NOT NULL,
+	"default_testing_environment" integer NOT NULL,
 	CONSTRAINT test_owners_pk PRIMARY KEY ("id")
 ) WITH (
   OIDS=FALSE
