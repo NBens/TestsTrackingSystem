@@ -146,7 +146,7 @@ class Xml():
         }
         test_id = self.Database.add_to_database("tests",tests)
 
-        
+        test_cases_counter = 0 # total test cases in the whole test
 
         """ Testing Environment """
         for item in env:
@@ -180,7 +180,7 @@ class Xml():
             """ Start Test Cases: """
             
             test_cases = tp.findall("tc")
-            test_cases_counter = 0
+
             for tc in test_cases:
                 test_cases_counter += 1
                 tc_time = tc.find("tc-time").text
