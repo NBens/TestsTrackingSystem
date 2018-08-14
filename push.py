@@ -9,7 +9,7 @@ from datetime import datetime
 class Database:
     """ Class that contains basic functions to handle a postgresql database """
     
-    def __init__ (self, db_name, db_user, db_password, host):
+    def __init__(self, db_name, db_user, db_password, host):
         
         try:
             connection = psycopg2.connect(dbname=db_name, user=db_user, password=db_password, host=host)
@@ -21,7 +21,6 @@ class Database:
             print(e)
             sys.exit(1)
 
-    
     def add_to_database(self, table, dictionary_of_columns_and_values):
         
         """ Function takes two arguments:
@@ -75,7 +74,7 @@ class Database:
         self.connection.close()
 
 
-class Xml():
+class Xml:
     
     def __init__ (self, file_path, Database):
         self.file = file_path
