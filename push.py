@@ -6,7 +6,7 @@ import xml.etree.ElementTree as etree
 from datetime import datetime
 
 
-class Database():
+class Database:
     """ Class that contains basic functions to handle a postgresql database """
     
     def __init__ (self, db_name, db_user, db_password, host):
@@ -216,9 +216,7 @@ class Xml():
                 sos = [str(item.text) for item in tc.findall("so")]
                 stderrs = "\n".join(ses) if (len(ses) > 0) else 0
                 stdouts = "\n".join(sos) if (len(sos) > 0) else 0
-                
-                
-                
+
                 if (stderrs != 0):
                     file_dict = {
                         "test_case_id": tc_id,
@@ -327,7 +325,7 @@ class Kyua():
         for test_program in test_programs:
 
             test_program_dict = {
-                "test_id": "test_id",
+                "test_id": test_id,
                 "absolute_path": test_program[1],
                 "root": test_program[2],
                 "relative_path": test_program[3],
@@ -341,16 +339,21 @@ class Kyua():
 
             test_cases = self.select_from_database("test_cases", ["test_case_id", "test_program_id", "name"], "test_program_id='{}'".format(test_program_id))
 
+            tp_timer = 0
+
             for test_case in test_cases:
 
                 test_result = self.select_from_database("test_results", ["result_type", "result_reason", "start_time", "end_time"], "test_case_id='{}'".format(test_case[0]))
                 test_result = test_result[0]
                 tc_time = (test_result[3] - test_result[2]) / 1000000
 
+                tp_timer += tc_time
+
+                result_reason = test_result[1] if test_result[1] is not None else ""
                 test_case_dict = {
                     "test_program_id": postgresql_test_program_id,
                     "result": test_result[0],
-                    "result_reason": test_result[1],
+                    "result_reason": result_reason,
                     "name": test_case[2],
                     "tc_time": tc_time
                 }
@@ -390,6 +393,8 @@ class Kyua():
                     }
 
                     self.database.add_to_database("files", stderr_file_dict)
+
+            self.database.update_database("test_programs", {"tp_time": tp_timer}, postgresql_test_program_id)
 
 
 if __name__ == "__main__":
