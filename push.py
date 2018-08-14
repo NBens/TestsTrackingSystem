@@ -1,6 +1,7 @@
 import sys
 import argparse
 import psycopg2
+import sqlite3
 import xml.etree.ElementTree as etree
 from datetime import datetime
 
@@ -240,10 +241,161 @@ class Xml():
         return test_id
 
 
+class Kyua():
+    """ Class that handles SQLITE database (Kyua results files) """
+    
+    def __init__(self, sqlite_database_path, database):
+        
+        self.db_path = sqlite_database_path
+        self.database = database
+        self.date_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        try:
+            self.connection = sqlite3.connect(self.db_path)
+            self.cursor = self.connection.cursor()
+        except Exception as e:
+            print("Unable to connect to the database")
+            print(e)
+            sys.exit(1)
+
+    def var_from_list_of_tuples(self,variable, tuples_list):
+
+        for tup in tuples_list:
+            if tup[0] == variable:
+                return tup[1]
+
+
+    def select_from_database(self, table, columns, conditions=None):
+
+        sql_query = "SELECT {} FROM {}".format(", ".join(columns), table)
+        if conditions:
+            sql_query += " WHERE {}".format(conditions)
+
+        executed_query = self.cursor.execute(sql_query)
+
+        result_list = []
+
+        for row in executed_query:
+            result_list.append(row)
+
+        return result_list
+
+    def run(self):
+
+        cwd = self.select_from_database("contexts", ["*"])[0]
+        cwd = cwd[0]
+
+        environment_variables = self.select_from_database("env_vars", ["*"])
+        root = self.var_from_list_of_tuples("PWD", environment_variables)
+
+        sqlite_sequence = self.select_from_database("sqlite_sequence", ["*"])
+        test_cases_count = self.var_from_list_of_tuples("test_cases", sqlite_sequence)
+        test_programs_count = self.var_from_list_of_tuples("test_programs", sqlite_sequence)
+
+        time_start = self.select_from_database("metadata", ["timestamp"])[0]
+        time_start = datetime.fromtimestamp(time_start[0]).strftime("%Y-%m-%d %H:%M:%S")
+
+
+        tests = {
+            "cwd": cwd,
+            "root": root,
+            "testing_environment_id": 1,
+            "test_cases": test_cases_count,
+            "test_programs": test_programs_count,
+            "upload_date": self.date_now,
+            "test_date": time_start,
+            "sysname": "NetBSD",
+            "release": "SMTH",
+            "port": "SMTH",
+            "branch": "SMTH"
+        }
+
+        test_id = self.database.add_to_database("tests",tests)
+
+        for env_variable in environment_variables:
+
+            env_variables_dict = {
+                "name": env_variable[0],
+                "value": env_variable[1],
+                "test_id": test_id
+            }
+
+            self.database.add_to_database("env_variables", env_variables_dict)
+
+        test_programs = self.select_from_database("test_programs", ["test_program_id", "absolute_path", "root", "relative_path", "test_suite_name"])
+
+
+        for test_program in test_programs:
+
+            test_program_dict = {
+                "test_id": "test_id",
+                "absolute_path": test_program[1],
+                "root": test_program[2],
+                "relative_path": test_program[3],
+                "test_suite_name": test_program[4],
+                "tp_time": 0
+            }
+
+            postgresql_test_program_id = self.database.add_to_database("test_programs",test_program_dict)
+
+            test_program_id = test_program[0]
+
+            test_cases = self.select_from_database("test_cases", ["test_case_id", "test_program_id", "name"], "test_program_id='{}'".format(test_program_id))
+
+            for test_case in test_cases:
+
+                test_result = self.select_from_database("test_results", ["result_type", "result_reason", "start_time", "end_time"], "test_case_id='{}'".format(test_case[0]))
+                test_result = test_result[0]
+                tc_time = (test_result[3] - test_result[2]) / 1000000
+
+                test_case_dict = {
+                    "test_program_id": postgresql_test_program_id,
+                    "result": test_result[0],
+                    "result_reason": test_result[1],
+                    "name": test_case[2],
+                    "tc_time": tc_time
+                }
+
+                postgresql_test_case_id = self.database.add_to_database("test_cases",test_case_dict)
+
+                stdout_file = self.select_from_database("test_case_files", ["file_name", "file_id"], "file_name='__STDOUT__' AND test_case_id='{}'".format(test_case[0]))
+                if len(stdout_file) > 0:
+                    stdout_file = stdout_file[0]
+
+                    file_id = stdout_file[1]
+
+                    file_content = self.select_from_database("files", ["contents"], "file_id='{}'".format(file_id))
+                    file_content = file_content[0][0].decode()
+
+                    stdout_file_dict = {
+                        "test_case_id": postgresql_test_case_id,
+                        "file_type": "__STDOUT__",
+                        "content": file_content
+                    }
+
+                    self.database.add_to_database("files", stdout_file_dict)
+
+                stderr_file = self.select_from_database("test_case_files", ["file_name", "file_id"], "file_name='__STDERR__' AND test_case_id='{}'".format(test_case[0]))
+                if len(stderr_file) > 0:
+                    stderr_file = stderr_file[0]
+
+                    file_id = stderr_file[1]
+
+                    file_content = self.select_from_database("files", ["contents"], "file_id='{}'".format(file_id))
+                    file_content = file_content[0][0].decode()
+
+                    stderr_file_dict = {
+                        "test_case_id": postgresql_test_case_id,
+                        "file_type": "__STDERR__",
+                        "content": file_content
+                    }
+
+                    self.database.add_to_database("files", stderr_file_dict)
+
+
 if __name__ == "__main__":
     
     ap = argparse.ArgumentParser()
-    ap.add_argument('-f', '--file', help='XML File Path', required=True)
+    ap.add_argument('-f', '--file', help='XML/DB File Path', required=True)
     ap.add_argument('-t', '--test-env', help='Testing Environment', required=False)
     ap.add_argument('-l', '--host', help='Database Host', required=False)
 
@@ -253,11 +405,16 @@ if __name__ == "__main__":
     database_username = "postgres"
     database_password = "postgres"
     database_host = "localhost"
-    
+
     myDb = Database(database_name, database_username, database_password, database_host)
-    xml = Xml(options.file, myDb)
-    xml.run()
+
+    if options.file[-3:] == ".db":
+        kyua_database = Kyua(options.file, myDb)
+        kyua_database.run()
+    elif options.file[-4:] == ".xml":
+        xml = Xml(options.file, myDb)
+        xml.run()
+    else:
+        print("Only .DB & .XML files allowed")
+
     myDb.close()
-    
-
-
