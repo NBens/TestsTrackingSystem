@@ -1,6 +1,7 @@
 # TestsTrackingSystem
 
-### SQL Database for ATF tests results with online query and statistics page
+### Platform for analysing & tracking NetBSD tests results
+### A Google Summer of Code 2018 Project
 
 
 # Milestones:
