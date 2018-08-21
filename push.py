@@ -2,6 +2,7 @@ import sys
 import argparse
 import psycopg2
 import sqlite3
+import config
 import xml.etree.ElementTree as etree
 from datetime import datetime
 
@@ -405,10 +406,11 @@ if __name__ == "__main__":
 
     options = ap.parse_args()
 
-    database_name = "netbsd"
-    database_username = "postgres"
-    database_password = "postgres"
-    database_host = "localhost"
+    configuration = Config()
+    database_name = configuration.DB_HOST
+    database_username = configuration.DB_USER
+    database_password = configuration.DB_PASSWORD
+    database_host = configuration.DB_HOST
 
     myDb = Database(database_name, database_username, database_password, database_host)
 
