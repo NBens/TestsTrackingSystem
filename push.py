@@ -406,11 +406,12 @@ if __name__ == "__main__":
 
     options = ap.parse_args()
 
-    configuration = Config()
+    configuration = config.Config()
     database_name = configuration.DB_HOST
     database_username = configuration.DB_USER
     database_password = configuration.DB_PASSWORD
     database_host = configuration.DB_HOST
+
 
     myDb = Database(database_name, database_username, database_password, database_host)
 
