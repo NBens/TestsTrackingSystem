@@ -402,7 +402,6 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument('-f', '--file', help='XML/DB File Path', required=True)
     ap.add_argument('-t', '--test-env', help='Testing Environment', required=False)
-    ap.add_argument('-l', '--host', help='Database Host', required=False)
 
     options = ap.parse_args()
 

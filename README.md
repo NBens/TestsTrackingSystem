@@ -47,5 +47,13 @@ You could also use one command to do the same thing:
 
 ``` psql -U USERNAME -d DATABASE_NAME -a -f DB_SQL.sql_FILE_PATH ```
 
+## Configuration:
+
+Open config.py file, and edit the database information.
+
+## Usage:
+
+``` push -f (FILE_PATH: XML or DB files only) ```
+
 
 
