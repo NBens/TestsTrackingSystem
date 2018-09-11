@@ -70,6 +70,7 @@ def json_keys(json_file_path):
     with open(json_file_path, "r") as json_file:
         json_data = json.load(json_file)
         json_keys = [*json_data]
+        return json_keys
 
 if __name__ == "__main__":
 
